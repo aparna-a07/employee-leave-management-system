@@ -1,0 +1,77 @@
+{% extends 'leaves/base.html' %}
+{% block title %}My Leaves – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">📄 My Leave Requests</div>
+  <a href="{% url 'apply_leave' %}" class="btn btn-primary">➕ Apply Leave</a>
+</div>
+
+<div class="card">
+  <div class="filter-bar">
+    <span style="font-size:.82rem;color:#888;margin-right:4px;">Filter:</span>
+    <a href="{% url 'my_leaves' %}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+    <a href="?status=pending" class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">⏳ Pending</a>
+    <a href="?status=approved" class="filter-btn {% if status_filter == 'approved' %}active{% endif %}">✅ Approved</a>
+    <a href="?status=rejected" class="filter-btn {% if status_filter == 'rejected' %}active{% endif %}">❌ Rejected</a>
+    <a href="?status=cancelled" class="filter-btn {% if status_filter == 'cancelled' %}active{% endif %}">🚫 Cancelled</a>
+  </div>
+  {% if leaves %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Applied On</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+    {% for l in leaves %}
+    <tr>
+      <td><span class="badge badge-{{ l.leave_type }}">{{ l.get_leave_type_display }}</span></td>
+      <td>{{ l.start_date }}</td>
+      <td>{{ l.end_date }}</td>
+      <td style="font-weight:600;">{{ l.days_count }}</td>
+      <td><span class="badge badge-{{ l.status }}">{{ l.get_status_display }}</span></td>
+      <td style="color:#888;font-size:.8rem;">{{ l.applied_on|date:"M d, Y" }}</td>
+      <td>
+        <a href="{% url 'leave_detail' l.pk %}" class="btn btn-outline btn-sm">View</a>
+        {% if l.status == 'pending' %}
+        <button class="btn btn-danger btn-sm" onclick="confirmCancel({{ l.pk }})">Cancel</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="icon">📭</div><p>No leave requests found.</p></div>
+  {% endif %}
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <h3>Cancel Leave Request?</h3>
+    <p style="color:#666;font-size:.9rem;margin-top:8px;">Are you sure you want to cancel this leave request? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Keep</button>
+      <form id="cancelForm" method="post" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function confirmCancel(pk) {
+  document.getElementById('cancelForm').action = `/leaves/${pk}/cancel/`;
+  document.getElementById('cancelModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('cancelModal').classList.remove('open');
+}
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

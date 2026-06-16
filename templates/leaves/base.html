@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Leave Management{% endblock %}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+
+  /* NAV */
+  .navbar {
+    background: #1e3a5f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .nav-brand { font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; display: flex; align-items: center; gap: 8px; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    color: #cdd8e8; text-decoration: none; padding: 8px 14px; border-radius: 6px;
+    font-size: .88rem; transition: background .2s, color .2s;
+  }
+  .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,.15); color: #fff; }
+  .notif-btn { position: relative; }
+  .notif-badge {
+    position: absolute; top: 2px; right: 2px;
+    background: #e74c3c; color: #fff; border-radius: 50%;
+    width: 16px; height: 16px; font-size: .65rem;
+    display: flex; align-items: center; justify-content: center;
+    display: none;
+  }
+  .nav-user { font-size: .85rem; color: #a8bdd6; margin-left: 8px; }
+  .btn-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #cdd8e8; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: .85rem; text-decoration: none; transition: background .2s; }
+  .btn-logout:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+  /* CONTAINER */
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+  /* CARDS */
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); padding: 24px; margin-bottom: 24px; }
+  .card-title { font-size: 1rem; font-weight: 600; color: #1e3a5f; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.07); text-align: center; border-top: 4px solid; }
+  .stat-card.annual { border-color: #3498db; }
+  .stat-card.sick { border-color: #e74c3c; }
+  .stat-card.casual { border-color: #2ecc71; }
+  .stat-card h3 { font-size: .8rem; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .stat-num { font-size: 2rem; font-weight: 700; }
+  .stat-card.annual .stat-num { color: #3498db; }
+  .stat-card.sick .stat-num { color: #e74c3c; }
+  .stat-card.casual .stat-num { color: #2ecc71; }
+  .stat-sub { font-size: .75rem; color: #aaa; margin-top: 4px; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; text-transform: capitalize; }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-approved { background: #d1e7dd; color: #0a3622; }
+  .badge-rejected { background: #f8d7da; color: #58151c; }
+  .badge-cancelled { background: #e2e3e5; color: #41464b; }
+  .badge-annual { background: #cfe2ff; color: #084298; }
+  .badge-sick { background: #f8d7da; color: #58151c; }
+  .badge-casual { background: #d1e7dd; color: #0a3622; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f8f9fa; color: #555; font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; padding: 11px 14px; text-align: left; border-bottom: 2px solid #e9ecef; }
+  td { padding: 12px 14px; font-size: .88rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8f9fa; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: .875rem; font-weight: 600; text-decoration: none; transition: all .2s; }
+  .btn-primary { background: #1e3a5f; color: #fff; }
+  .btn-primary:hover { background: #27507a; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #229954; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #6c757d; color: #fff; }
+  .btn-secondary:hover { background: #5a6268; }
+  .btn-sm { padding: 5px 11px; font-size: .78rem; }
+  .btn-outline { background: transparent; border: 1.5px solid #1e3a5f; color: #1e3a5f; }
+  .btn-outline:hover { background: #1e3a5f; color: #fff; }
+
+  /* FORM */
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-size: .85rem; font-weight: 600; color: #444; margin-bottom: 6px; }
+  input, select, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: .9rem; color: #333; transition: border-color .2s; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #1e3a5f; }
+  textarea { resize: vertical; min-height: 90px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: .88rem; display: flex; align-items: center; gap: 8px; }
+  .alert-success { background: #d1e7dd; color: #0a3622; border-left: 4px solid #27ae60; }
+  .alert-error { background: #f8d7da; color: #58151c; border-left: 4px solid #e74c3c; }
+
+  /* FILTERS */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: .82rem; text-decoration: none; color: #555; transition: all .2s; }
+  .filter-btn:hover, .filter-btn.active { border-color: #1e3a5f; background: #1e3a5f; color: #fff; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 48px; color: #aaa; }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: .9rem; }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 1.3rem; font-weight: 700; color: #1e3a5f; }
+
+  /* DETAIL */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .detail-item label { font-size: .78rem; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  .detail-item p { font-size: .95rem; color: #333; font-weight: 500; margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 8px 40px rgba(0,0,0,.2); }
+  .modal h3 { margin-bottom: 16px; color: #1e3a5f; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  /* NOTIF LIST */
+  .notif-item { padding: 14px; border-radius: 8px; border-left: 4px solid #1e3a5f; background: #f8f9fa; margin-bottom: 10px; font-size: .88rem; }
+  .notif-item.unread { background: #eef3ff; border-color: #3498db; }
+  .notif-time { font-size: .75rem; color: #aaa; margin-top: 4px; }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<nav class="navbar">
+  <div class="nav-brand">📋 LeaveTrack</div>
+  <div class="nav-links">
+    <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>🏠 Dashboard</a>
+    <a href="{% url 'apply_leave' %}" {% if request.resolver_match.url_name == 'apply_leave' %}class="active"{% endif %}>➕ Apply</a>
+    <a href="{% url 'my_leaves' %}" {% if request.resolver_match.url_name == 'my_leaves' %}class="active"{% endif %}>📄 My Leaves</a>
+    {% if user.is_staff %}
+    <a href="{% url 'all_leaves' %}" {% if request.resolver_match.url_name == 'all_leaves' %}class="active"{% endif %}>👥 All Leaves</a>
+    {% endif %}
+    <a href="{% url 'notifications' %}" class="notif-btn {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+      🔔 Alerts
+      <span class="notif-badge" id="notif-badge">0</span>
+    </a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="nav-user">{{ user.get_full_name|default:user.username }}</span>
+    <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+  </div>
+</nav>
+{% endif %}
+
+<div class="container">
+  {% for m in messages %}
+  <div class="alert alert-{% if m.tags == 'error' %}error{% else %}success{% endif %}">
+    {% if m.tags == 'error' %}❌{% else %}✅{% endif %} {{ m }}
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</div>
+
+{% if user.is_authenticated %}
+<script>
+function updateNotifBadge() {
+  fetch('/notifications/count/')
+    .then(r => r.json())
+    .then(d => {
+      const badge = document.getElementById('notif-badge');
+      if (d.count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = d.count;
+      } else {
+        badge.style.display = 'none';
+      }
+    });
+}
+updateNotifBadge();
+setInterval(updateNotifBadge, 30000);
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

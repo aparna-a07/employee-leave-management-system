@@ -1,0 +1,84 @@
+{% extends 'leaves/base.html' %}
+{% block title %}Dashboard – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Welcome, {{ user.get_full_name|default:user.username }} 👋</div>
+    <div style="font-size:.85rem;color:#888;margin-top:2px;">{% if is_manager %}Manager View{% else %}Employee View{% endif %} &nbsp;·&nbsp; {{ "now"|date:"F d, Y" }}</div>
+  </div>
+  <a href="{% url 'apply_leave' %}" class="btn btn-primary">➕ Apply for Leave</a>
+</div>
+
+<!-- BALANCE -->
+<div class="stats-grid">
+  <div class="stat-card annual">
+    <h3>Annual Leave</h3>
+    <div class="stat-num">{{ balance.annual_remaining }}</div>
+    <div class="stat-sub">of {{ balance.annual_leave }} days remaining</div>
+  </div>
+  <div class="stat-card sick">
+    <h3>Sick Leave</h3>
+    <div class="stat-num">{{ balance.sick_remaining }}</div>
+    <div class="stat-sub">of {{ balance.sick_leave }} days remaining</div>
+  </div>
+  <div class="stat-card casual">
+    <h3>Casual Leave</h3>
+    <div class="stat-num">{{ balance.casual_remaining }}</div>
+    <div class="stat-sub">of {{ balance.casual_leave }} days remaining</div>
+  </div>
+</div>
+
+<!-- MY RECENT REQUESTS -->
+<div class="card">
+  <div class="card-title">📄 My Recent Requests
+    <a href="{% url 'my_leaves' %}" style="margin-left:auto;font-size:.8rem;color:#3498db;font-weight:400;text-decoration:none;">View all →</a>
+  </div>
+  {% if my_requests %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Applied</th></tr></thead>
+    <tbody>
+    {% for l in my_requests %}
+    <tr>
+      <td><span class="badge badge-{{ l.leave_type }}">{{ l.get_leave_type_display }}</span></td>
+      <td>{{ l.start_date }} → {{ l.end_date }}</td>
+      <td>{{ l.days_count }}</td>
+      <td><span class="badge badge-{{ l.status }}">{{ l.status }}</span></td>
+      <td style="color:#888;font-size:.8rem;">{{ l.applied_on|date:"M d, Y" }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="icon">📭</div><p>No leave requests yet.</p></div>
+  {% endif %}
+</div>
+
+<!-- MANAGER: PENDING FOR REVIEW -->
+{% if is_manager and pending_for_review %}
+<div class="card">
+  <div class="card-title">⏳ Pending Approvals
+    <a href="{% url 'all_leaves' %}?status=pending" style="margin-left:auto;font-size:.8rem;color:#3498db;font-weight:400;text-decoration:none;">View all →</a>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for l in pending_for_review %}
+    <tr>
+      <td><strong>{{ l.employee.get_full_name }}</strong></td>
+      <td><span class="badge badge-{{ l.leave_type }}">{{ l.get_leave_type_display }}</span></td>
+      <td>{{ l.start_date }} → {{ l.end_date }}</td>
+      <td>{{ l.days_count }}</td>
+      <td>
+        <a href="{% url 'leave_detail' l.pk %}" class="btn btn-outline btn-sm">Review</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

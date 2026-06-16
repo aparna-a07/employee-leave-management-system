@@ -1,0 +1,46 @@
+{% extends 'leaves/base.html' %}
+{% block title %}All Leaves – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">👥 All Leave Requests</div>
+</div>
+
+<div class="card">
+  <div class="filter-bar">
+    <span style="font-size:.82rem;color:#888;margin-right:4px;">Filter:</span>
+    <a href="{% url 'all_leaves' %}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+    <a href="?status=pending" class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">⏳ Pending</a>
+    <a href="?status=approved" class="filter-btn {% if status_filter == 'approved' %}active{% endif %}">✅ Approved</a>
+    <a href="?status=rejected" class="filter-btn {% if status_filter == 'rejected' %}active{% endif %}">❌ Rejected</a>
+    <a href="?status=cancelled" class="filter-btn {% if status_filter == 'cancelled' %}active{% endif %}">🚫 Cancelled</a>
+  </div>
+  {% if leaves %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Applied</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+    {% for l in leaves %}
+    <tr>
+      <td><strong>{{ l.employee.get_full_name }}</strong><br><span style="font-size:.75rem;color:#888;">{{ l.employee.email }}</span></td>
+      <td><span class="badge badge-{{ l.leave_type }}">{{ l.get_leave_type_display }}</span></td>
+      <td>{{ l.start_date }}<br><span style="font-size:.78rem;color:#aaa;">→ {{ l.end_date }}</span></td>
+      <td style="font-weight:600;text-align:center;">{{ l.days_count }}</td>
+      <td><span class="badge badge-{{ l.status }}">{{ l.get_status_display }}</span></td>
+      <td style="color:#888;font-size:.8rem;">{{ l.applied_on|date:"M d, Y" }}</td>
+      <td>
+  <a href="{% url 'leave_detail' l.pk %}" class="btn btn-outline btn-sm">
+    {% if l.status == 'pending' %}Review{% else %}View{% endif %}
+  </a>
+</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="icon">📭</div><p>No leave requests found.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

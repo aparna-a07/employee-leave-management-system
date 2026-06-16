@@ -1,0 +1,31 @@
+{% extends 'leaves/base.html' %}
+{% block title %}Notifications – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">🔔 Notifications</div>
+  {% if notifications %}
+  <button class="btn btn-secondary" onclick="markAllRead()">Mark All Read</button>
+  {% endif %}
+</div>
+
+<div class="card">
+  {% if notifications %}
+    {% for n in notifications %}
+    <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+      <div>{{ n.message }}</div>
+      <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state"><div class="icon">🔕</div><p>No notifications yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function markAllRead() {
+  fetch('/notifications/mark-read/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
+    .then(() => { document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread')); document.getElementById('notif-badge').style.display = 'none'; });
+}
+</script>
+{% endblock %}

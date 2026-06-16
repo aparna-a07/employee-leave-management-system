@@ -1,0 +1,115 @@
+{% extends 'leaves/base.html' %}
+{% block title %}Apply Leave – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">➕ Apply for Leave</div>
+  <a href="{% url 'my_leaves' %}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+<div class="card">
+  <form method="post" id="leaveForm">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Leave Type</label>
+      <select name="leave_type" required id="leaveType">
+        <option value="">-- Select Type --</option>
+        <option value="annual">Annual Leave ({{ balance.annual_remaining }} days remaining)</option>
+        <option value="sick">Sick Leave ({{ balance.sick_remaining }} days remaining)</option>
+        <option value="casual">Casual Leave ({{ balance.casual_remaining }} days remaining)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" name="start_date" id="startDate" required>
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" name="end_date" id="endDate" required>
+      </div>
+    </div>
+    <div class="form-group" id="daysPreview" style="display:none;">
+      <div style="background:#eef3ff;border-radius:8px;padding:10px 14px;font-size:.88rem;color:#1e3a5f;font-weight:600;">
+        📅 Total days: <span id="daysCount">0</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Reason</label>
+      <textarea name="reason" placeholder="Briefly describe the reason for leave..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%">Submit Request</button>
+  </form>
+</div>
+
+<div>
+  <div class="card">
+    <div class="card-title">💼 Leave Balance</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:.8rem;color:#888;margin-bottom:4px;">Annual Leave</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:600;color:#3498db;">{{ balance.annual_remaining }} / {{ balance.annual_leave }}</span>
+      </div>
+      <div style="background:#e9ecef;border-radius:4px;height:6px;">
+        <div style="background:#3498db;height:6px;border-radius:4px;width:{% widthratio balance.annual_remaining balance.annual_leave 100 %}%"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:.8rem;color:#888;margin-bottom:4px;">Sick Leave</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:600;color:#e74c3c;">{{ balance.sick_remaining }} / {{ balance.sick_leave }}</span>
+      </div>
+      <div style="background:#e9ecef;border-radius:4px;height:6px;">
+        <div style="background:#e74c3c;height:6px;border-radius:4px;width:{% widthratio balance.sick_remaining balance.sick_leave 100 %}%"></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:.8rem;color:#888;margin-bottom:4px;">Casual Leave</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:600;color:#2ecc71;">{{ balance.casual_remaining }} / {{ balance.casual_leave }}</span>
+      </div>
+      <div style="background:#e9ecef;border-radius:4px;height:6px;">
+        <div style="background:#2ecc71;height:6px;border-radius:4px;width:{% widthratio balance.casual_remaining balance.casual_leave 100 %}%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="font-size:.83rem;color:#666;line-height:1.7;">
+    <div class="card-title">ℹ️ Guidelines</div>
+    <p>• Apply at least 2 days in advance for annual leave.</p>
+    <p>• Sick leave can be applied retrospectively.</p>
+    <p>• Attach medical certificate for sick leave > 3 days.</p>
+    <p>• Casual leave cannot be carried over.</p>
+  </div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const startDate = document.getElementById('startDate');
+const endDate = document.getElementById('endDate');
+const daysPreview = document.getElementById('daysPreview');
+const daysCount = document.getElementById('daysCount');
+
+// Set min date to today
+const today = new Date().toISOString().split('T')[0];
+startDate.min = today;
+
+startDate.addEventListener('change', () => {
+  endDate.min = startDate.value;
+  calcDays();
+});
+endDate.addEventListener('change', calcDays);
+
+function calcDays() {
+  if (startDate.value && endDate.value) {
+    const s = new Date(startDate.value);
+    const e = new Date(endDate.value);
+    if (e >= s) {
+      const days = Math.round((e - s) / 86400000) + 1;
+      daysCount.textContent = days;
+      daysPreview.style.display = 'block';
+    }
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'leaves/base.html' %}
+{% block title %}Leave Detail – LeaveTrack{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">Leave Request Details</div>
+  <a href="javascript:history.back()" class="btn btn-secondary">← Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+<div class="card">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <div>
+      <div style="font-size:1.1rem;font-weight:700;color:#1e3a5f;">{{ leave.employee.get_full_name }}</div>
+      <div style="font-size:.83rem;color:#888;">{{ leave.employee.email }}</div>
+    </div>
+    <span class="badge badge-{{ leave.status }}" style="margin-left:auto;font-size:.85rem;padding:6px 14px;">{{ leave.get_status_display }}</span>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Leave Type</label>
+      <p><span class="badge badge-{{ leave.leave_type }}">{{ leave.get_leave_type_display }}</span></p>
+    </div>
+    <div class="detail-item">
+      <label>Duration</label>
+      <p>{{ leave.days_count }} day{{ leave.days_count|pluralize }}</p>
+    </div>
+    <div class="detail-item">
+      <label>Start Date</label>
+      <p>{{ leave.start_date }}</p>
+    </div>
+    <div class="detail-item">
+      <label>End Date</label>
+      <p>{{ leave.end_date }}</p>
+    </div>
+    <div class="detail-item">
+      <label>Applied On</label>
+      <p>{{ leave.applied_on|date:"M d, Y H:i" }}</p>
+    </div>
+    {% if leave.reviewed_by %}
+    <div class="detail-item">
+      <label>Reviewed By</label>
+      <p>{{ leave.reviewed_by.get_full_name }}</p>
+    </div>
+    {% endif %}
+  </div>
+  <div style="margin-top:16px;">
+    <label style="font-size:.78rem;color:#888;text-transform:uppercase;letter-spacing:.5px;">Reason</label>
+    <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-top:6px;font-size:.9rem;color:#444;line-height:1.6;">{{ leave.reason }}</div>
+  </div>
+  {% if leave.manager_comment %}
+  <div style="margin-top:16px;">
+    <label style="font-size:.78rem;color:#888;text-transform:uppercase;letter-spacing:.5px;">Manager Comment</label>
+    <div style="background:#fff3cd;border-radius:8px;padding:12px;margin-top:6px;font-size:.9rem;color:#444;line-height:1.6;">{{ leave.manager_comment }}</div>
+  </div>
+  {% endif %}
+</div>
+
+<div>
+{% if request.user.is_staff and leave.status == 'pending' %}
+<div class="card">
+  <div class="card-title">✅ Review Request</div>
+  <form method="post" action="{% url 'review_leave' leave.pk %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Comment (optional)</label>
+      <textarea name="comment" placeholder="Add a comment for the employee..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button type="submit" name="action" value="approved" class="btn btn-success" style="flex:1">✅ Approve</button>
+      <button type="submit" name="action" value="rejected" class="btn btn-danger" style="flex:1">❌ Reject</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if leave.employee == request.user and leave.status == 'pending' %}
+<div class="card">
+  <div class="card-title">🚫 Cancel Request</div>
+  <p style="font-size:.85rem;color:#666;margin-bottom:14px;">You can cancel this request while it's still pending.</p>
+  <form method="post" action="{% url 'cancel_leave' leave.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger" style="width:100%" onclick="return confirm('Cancel this request?')">Cancel Leave Request</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">📊 Request Timeline</div>
+  <div style="font-size:.85rem;color:#555;line-height:2;">
+    <div>📝 Applied: {{ leave.applied_on|date:"M d, Y H:i" }}</div>
+    {% if leave.reviewed_on %}
+    <div>{{ leave.status|capfirst }}: {{ leave.reviewed_on|date:"M d, Y H:i" }}</div>
+    {% endif %}
+  </div>
+</div>
+</div>
+</div>
+{% endblock %}
